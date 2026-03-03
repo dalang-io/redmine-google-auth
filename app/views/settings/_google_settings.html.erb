@@ -7,6 +7,11 @@
   <%= text_field_tag 'settings[client_secret]', @settings[:client_secret], size: 60 %>
 </p>
 <p>
+  <label>Callback URL:</label>
+  <%= text_field_tag 'settings[callback_url]', @settings[:callback_url], size: 60, placeholder: 'https://redmine.example.com/oauth2callback' %>
+  <br><em>Must match the redirect URI in Google Cloud Console.</em>
+</p>
+<p>
   <label>Allowed domains (one per line):</label>
   <%= text_area_tag 'settings[allowed_domains]', @settings[:allowed_domains], rows: 3, cols: 60 %>
 </p>

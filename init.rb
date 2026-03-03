@@ -11,6 +11,7 @@ Redmine::Plugin.register :redmine_omniauth_google do
   settings default: {
     client_id: '',
     client_secret: '',
+    callback_url: '',
     oauth_authentification: false,
     allowed_domains: ''
   }, partial: 'settings/google_settings'

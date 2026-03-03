@@ -9,7 +9,7 @@ class RedmineOauthController < AccountController
     if Setting.plugin_redmine_omniauth_google[:oauth_authentification]
       session[:back_url] = params[:back_url]
       redirect_to oauth_client.auth_code.authorize_url(
-        redirect_uri: oauth_google_callback_url,
+        redirect_uri: callback_url,
         scope: scopes
       ), allow_other_host: true
     else
@@ -24,7 +24,7 @@ class RedmineOauthController < AccountController
       return
     end
 
-    token = oauth_client.auth_code.get_token(params[:code], redirect_uri: oauth_google_callback_url)
+    token = oauth_client.auth_code.get_token(params[:code], redirect_uri: callback_url)
     result = token.get('https://www.googleapis.com/oauth2/v1/userinfo')
     info = JSON.parse(result.body)
 
@@ -46,6 +46,11 @@ class RedmineOauthController < AccountController
   end
 
   private
+
+  def callback_url
+    url = settings[:callback_url]
+    url.present? ? url : oauth_google_callback_url
+  end
 
   def try_to_login(info)
     params[:back_url] = session[:back_url]
