@@ -1,4 +1,5 @@
 require 'json'
+require 'oauth2'
 
 class RedmineOauthController < AccountController
   include Helpers::MailHelper
@@ -91,7 +92,7 @@ class RedmineOauthController < AccountController
   end
 
   def oauth_client
-    @oauth_client ||= OAuth2::Client.new(
+    @oauth_client ||= ::OAuth2::Client.new(
       settings[:client_id],
       settings[:client_secret],
       site: 'https://accounts.google.com',
