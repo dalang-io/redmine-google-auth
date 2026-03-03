@@ -1,4 +1,5 @@
 require 'redmine'
+require_relative 'lib/redmine_omniauth_google/hooks'
 
 Redmine::Plugin.register :redmine_omniauth_google do
   name 'Redmine Google OAuth'
