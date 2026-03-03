@@ -1,0 +1,110 @@
+require 'json'
+
+class RedmineOauthController < AccountController
+  include Helpers::MailHelper
+  include Helpers::Checker
+
+  def oauth_google
+    if Setting.plugin_redmine_omniauth_google[:oauth_authentification]
+      session[:back_url] = params[:back_url]
+      redirect_to oauth_client.auth_code.authorize_url(
+        redirect_uri: oauth_google_callback_url,
+        scope: scopes
+      ), allow_other_host: true
+    else
+      password_authentication
+    end
+  end
+
+  def oauth_google_callback
+    if params[:error]
+      flash[:error] = l(:notice_access_denied)
+      redirect_to signin_path
+      return
+    end
+
+    token = oauth_client.auth_code.get_token(params[:code], redirect_uri: oauth_google_callback_url)
+    result = token.get('https://www.googleapis.com/oauth2/v1/userinfo')
+    info = JSON.parse(result.body)
+
+    if info && info['verified_email']
+      if allowed_domain_for?(info['email'])
+        try_to_login(info)
+      else
+        flash[:error] = l(:notice_domain_not_allowed, domain: parse_email(info['email'])[:domain])
+        redirect_to signin_path
+      end
+    else
+      flash[:error] = l(:notice_unable_to_obtain_google_credentials)
+      redirect_to signin_path
+    end
+  rescue OAuth2::Error, StandardError => e
+    Rails.logger.error "Google OAuth error: #{e.message}"
+    flash[:error] = l(:notice_unable_to_obtain_google_credentials)
+    redirect_to signin_path
+  end
+
+  private
+
+  def try_to_login(info)
+    params[:back_url] = session[:back_url]
+    session.delete(:back_url)
+
+    user = User.joins(:email_addresses).where(email_addresses: { address: info['email'] }).first
+
+    if user
+      if user.active?
+        successful_authentication(user)
+      else
+        account_pending(user)
+      end
+    else
+      unless Setting.self_registration?
+        flash[:error] = l(:notice_domain_not_allowed, domain: parse_email(info['email'])[:domain])
+        redirect_to signin_path
+        return
+      end
+
+      user = User.new
+      user.firstname = info['given_name'] || info['name']&.split(' ')&.first || ''
+      user.lastname = info['family_name'] || info['name']&.split(' ')&.last || ''
+      user.mail = info['email']
+      user.login = parse_email(info['email'])[:login]
+      user.random_password
+      user.register
+
+      case Setting.self_registration
+      when '1'
+        register_by_email_activation(user) do
+          onthefly_creation_failed(user)
+        end
+      when '3'
+        register_automatically(user) do
+          onthefly_creation_failed(user)
+        end
+      else
+        register_manually_by_administrator(user) do
+          onthefly_creation_failed(user)
+        end
+      end
+    end
+  end
+
+  def oauth_client
+    @oauth_client ||= OAuth2::Client.new(
+      settings[:client_id],
+      settings[:client_secret],
+      site: 'https://accounts.google.com',
+      authorize_url: '/o/oauth2/auth',
+      token_url: '/o/oauth2/token'
+    )
+  end
+
+  def settings
+    @settings ||= Setting.plugin_redmine_omniauth_google
+  end
+
+  def scopes
+    'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile'
+  end
+end

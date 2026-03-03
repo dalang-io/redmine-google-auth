@@ -1,0 +1,16 @@
+<p>
+  <label>Client ID:</label>
+  <%= text_field_tag 'settings[client_id]', @settings[:client_id], size: 60 %>
+</p>
+<p>
+  <label>Client Secret:</label>
+  <%= text_field_tag 'settings[client_secret]', @settings[:client_secret], size: 60 %>
+</p>
+<p>
+  <label>Allowed domains (one per line):</label>
+  <%= text_area_tag 'settings[allowed_domains]', @settings[:allowed_domains], rows: 3, cols: 60 %>
+</p>
+<p>
+  <label>Enable OAuth authentication:</label>
+  <%= check_box_tag 'settings[oauth_authentification]', true, @settings[:oauth_authentification] %>
+</p>
