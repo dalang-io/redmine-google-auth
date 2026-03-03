@@ -19,3 +19,8 @@
   <label>Enable OAuth authentication:</label>
   <%= check_box_tag 'settings[oauth_authentification]', true, @settings[:oauth_authentification] %>
 </p>
+<p>
+  <label>Hide password login form:</label>
+  <%= check_box_tag 'settings[hide_password_login]', true, @settings[:hide_password_login] %>
+  <br><em>Only show Google login button on the login page.</em>
+</p>

@@ -1,6 +1,9 @@
 <%= stylesheet_link_tag 'buttons', plugin: 'redmine_omniauth_google' %>
 
 <% if Setting.plugin_redmine_omniauth_google[:oauth_authentification] %>
+  <% if Setting.plugin_redmine_omniauth_google[:hide_password_login] %>
+    <style>#login-form { display: none; }</style>
+  <% end %>
   <div class="container-link-google">
     <%= link_to oauth_google_path(back_url: back_url) do %>
       <button type="button" class="button-login">
